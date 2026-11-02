@@ -396,11 +396,11 @@ function unfollow(term) {
   save('interests', 'words', 'followed'); if (view === 'followed') view = 'all'; chips();
 }
 let refreshing = false;
-async function refreshInterests() {
+async function refreshInterests(pulled) {
   if (refreshing) return; refreshing = true;
   const old = new Set(followedItems().map(x => x.id)); let added = false;
   for (const t of [...S.interests]) {
-    if (Date.now() - (S.followed[t]?.at || 0) < 2 * 36e5) continue;
+    if (Date.now() - (S.followed[t]?.at || 0) < (pulled ? 6e5 : 2 * 36e5)) continue;
     try {
       const a = await liveSearch(t);
       if (!S.interests.includes(t)) continue;
@@ -411,7 +411,7 @@ async function refreshInterests() {
     await new Promise(r => setTimeout(r, 1200));
   }
   refreshing = false;
-  if (added && !inSearch()) { if ($('feed').children.length && window.scrollY > 300) $('fresh').hidden = false; else render(); }
+  if (added && !inSearch() && !pulled) { if ($('feed').children.length && window.scrollY > 300) $('fresh').hidden = false; else render(); }
 }
 $('search-btn').onclick = openSearch;
 $('find-close').onclick = closeSearch;
@@ -445,14 +445,57 @@ async function load(first) {
     const hadData = data.items.length;
     data = next;
     $('updated').textContent = 'updated ' + ago(data.updated) + ' ago';
-    if (inSearch()) return;
+    if (inSearch()) return true;
     if (first || !hadData) render();
     else if (changed) $('fresh').hidden = false;
+    return true;
   } catch {
-    if (first) { const d = document.createElement('div'); d.className = 'empty'; const b = document.createElement('b'); b.textContent = "Can't reach your feed"; d.append(b, 'Check your connection and reopen the app.'); $('feed').replaceChildren(d); }
+    if (!first) return false;
+    { const d = document.createElement('div'); d.className = 'empty'; const b = document.createElement('b'); b.textContent = "Can't reach your feed"; d.append(b, 'Check your connection and reopen the app.'); $('feed').replaceChildren(d); }
   }
 }
 view = store.get('view', 'all'); if (!CATS[view] && view !== 'saved' && !(view === 'followed' && S.interests.length)) view = 'all';
 chips(); load(true).then(refreshInterests);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { load(false); refreshInterests(); } });
-if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+// Pull down from the top to get new stories and any new version of the app.
+let worker;
+const PULL_AT = 64, pull = { start: null, x: 0, dist: 0, busy: false };
+function showPull(dist, text, cls) {
+  const el = $('pull');
+  el.style.setProperty('--head', document.querySelector('.top').offsetHeight + 'px');
+  el.className = 'pull' + (cls ? ' ' + cls : '');
+  el.style.transform = `translateY(${dist}px)`;
+  el.style.opacity = dist ? Math.min(1, dist / 40) : 0;
+  $('pull-text').textContent = text;
+}
+async function pullRefresh() {
+  pull.busy = true;
+  showPull(62, 'Checking for new stories…', 'busy');
+  const known = new Set(allItems().map(x => x.id));
+  const [ok] = await Promise.all([load(false), refreshInterests(true), worker?.update().catch(() => {}), new Promise(r => setTimeout(r, 600))]);
+  const added = allItems().filter(x => !known.has(x.id) && allowed(x)).length;
+  if (ok) refreshOrder();
+  pull.busy = false; showPull(0, '');
+  if (!ok) toast("Can't reach your feed. Check your connection and pull again.");
+  else toast(added ? `${added} new ${added === 1 ? 'story' : 'stories'}.` : `You're up to date. Stories updated ${ago(data.updated)} ago.`);
+}
+const atTop = () => window.scrollY <= 0 && !inSearch() && !document.body.classList.contains('locked') && !pull.busy;
+addEventListener('touchstart', e => {
+  pull.start = atTop() && e.touches.length === 1 ? e.touches[0].clientY : null;
+  pull.x = e.touches[0].clientX; pull.dist = 0;
+}, { passive: true });
+addEventListener('touchmove', e => {
+  if (pull.start == null) return;
+  const dy = e.touches[0].clientY - pull.start, dx = Math.abs(e.touches[0].clientX - pull.x);
+  if (dy <= 0 || dx > dy) { pull.start = null; if (pull.dist) showPull(0, ''); pull.dist = 0; return; }
+  e.preventDefault();
+  pull.dist = Math.min(110, dy * .5);
+  showPull(pull.dist, pull.dist >= PULL_AT ? 'Release to refresh' : 'Pull to refresh', 'dragging');
+}, { passive: false });
+const endPull = () => {
+  if (pull.start == null) return;
+  const go = pull.dist >= PULL_AT; pull.start = null; pull.dist = 0;
+  if (go) pullRefresh(); else showPull(0, '');
+};
+addEventListener('touchend', endPull); addEventListener('touchcancel', endPull);
+if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').then(r => { worker = r; }).catch(() => {}));
