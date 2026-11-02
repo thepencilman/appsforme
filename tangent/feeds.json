@@ -6,7 +6,6 @@
   {"name":"WPRI","url":"https://www.wpri.com/feed/","cat":"local"},
   {"name":"Rhode Island Current","url":"https://rhodeislandcurrent.com/feed/","cat":"local"},
   {"name":"ecoRI News","url":"https://ecori.org/feed/","cat":"local"},
-  {"name":"Valley Breeze","url":"https://www.valleybreeze.com/feed/","cat":"local"},
   {"name":"Atlas Obscura","url":"https://www.atlasobscura.com/feeds/latest","cat":"weird"},
   {"name":"Messy Nessy","url":"https://www.messynessychic.com/feed/","cat":"weird"},
   {"name":"Open Culture","url":"https://www.openculture.com/feed","cat":"weird"},
