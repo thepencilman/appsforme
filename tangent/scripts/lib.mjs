@@ -51,6 +51,13 @@ export function cleanUrl(u) {
     return x.href;
   } catch { return ''; }
 }
+export function unwrapBing(u) {
+  try {
+    const x = new URL(u);
+    if (/(^|\.)bing\.com$/.test(x.hostname) && x.searchParams.get('url')) return x.searchParams.get('url');
+  } catch {}
+  return u;
+}
 export function goodImage(u) {
   const c = cleanUrl(u);
   if (!c) return '';
@@ -93,7 +100,8 @@ export function parseFeed(xml, feed) {
   const out = [];
   for (const it of raw) {
     const title = plain(it.title);
-    const url = cleanUrl(rss || rdf ? (text(it.link) || (it.guid?.['@isPermaLink'] !== 'false' ? text(it.guid) : '')) : atomLink(it));
+    const rawUrl = rss || rdf ? (text(it.link) || (it.guid?.['@isPermaLink'] !== 'false' ? text(it.guid) : '')) : atomLink(it);
+    const url = cleanUrl(unwrapBing(decode(rawUrl)));
     if (!title || !url) continue;
     const body = text(it['content:encoded'] ?? it.content ?? '');
     const desc = text(it.description ?? it.summary ?? '');
@@ -101,10 +109,11 @@ export function parseFeed(xml, feed) {
     let summary = plain(desc || body).replace(/\s*(The post|Read more|Continue reading|Article URL:)[\s\S]*$/i, '').trim();
     if (summary.toLowerCase().startsWith(title.toLowerCase())) summary = summary.slice(title.length).replace(/^[\s:.–—-]+/, '');
     out.push({
-      id: idFor(url), title: clip(title, 180), url, source: feed.name, cat: feed.cat,
+      id: idFor(url), title: clip(title, 180), url, source: plain(it['News:Source'] ?? '') || feed.name, cat: feed.cat,
       date: Number.isNaN(when) ? null : new Date(Math.min(when, Date.now())).toISOString(),
       summary: clip(summary), image: imageOf(it, body + ' ' + desc),
-      ...(feed.evergreen ? { evergreen: true } : {})
+      ...(feed.evergreen ? { evergreen: true } : {}),
+      ...(feed.allowSerious ? { allowSerious: true } : {})
     });
   }
   return out;

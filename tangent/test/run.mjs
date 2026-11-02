@@ -26,4 +26,7 @@ assert.equal(goodImage('https://x.com/pixel.gif'), '');
 assert.equal(goodImage('javascript:alert(1)'), '');
 assert.equal(plain('<script>x</script>&lt;b&gt;ok&lt;/b&gt;'), 'ok');
 assert(clip('word '.repeat(100), 50).endsWith('…'));
+const bing = `<rss xmlns:News="https://x"><channel><item><title>Local thing</title><link>http://www.bing.com/news/apiclick.aspx?ref=FexRss&amp;url=https%3A%2F%2Fvalleybreeze.com%2Fa%3Futm_source%3Dx&amp;c=1</link><News:Source>Valley Breeze</News:Source><pubDate>Mon, 02 Nov 2026 10:00:00 GMT</pubDate></item></channel></rss>`;
+const c = parseFeed(bing, { name: 'Woonsocket news', cat: 'local', allowSerious: true });
+assert.equal(c[0].url, 'https://valleybreeze.com/a'); assert.equal(c[0].source, 'Valley Breeze'); assert.equal(c[0].allowSerious, true);
 console.log('all passed');

@@ -24,8 +24,10 @@
       <span>tangent</span>
     </a>
     <span class="updated" id="updated"></span>
+    <button class="icon" id="search-btn" aria-label="Search"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg></button>
     <button class="icon" id="tune" aria-label="Tune your feed"><svg viewBox="0 0 24 24"><path d="M4 7h9m6 0h1M4 17h1m6 0h9"/><circle cx="16" cy="7" r="2.6"/><circle cx="8" cy="17" r="2.6"/></svg></button>
   </div>
+  <form class="find" id="find" hidden><input id="q" type="search" enterkeyhint="search" autocomplete="off" placeholder="Search anything" aria-label="Search stories"><button type="button" id="find-close">Cancel</button></form>
   <nav class="chips" id="chips" aria-label="Topics"></nav>
 </header>
 <button class="fresh" id="fresh" hidden>New stories</button>
@@ -36,7 +38,8 @@
 <section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" hidden>
   <div class="sheet-head"><h2 id="sheet-title">Tune your feed</h2><button class="done" id="close">Done</button></div>
   <div id="dials" class="dials"></div>
-  <label class="switch"><span><b>Keep serious news out</b><small>Stories about politics, wars and crime stay hidden, even if they get past the filter that runs on the server.</small></span><input type="checkbox" id="serious"></label>
+  <div class="field"><b>Interests you follow</b><div id="interests" class="muted"></div></div>
+  <label class="switch"><span><b>Keep serious news out</b><small>Stories about politics, wars and crime stay hidden. Local news and interests you follow always show.</small></span><input type="checkbox" id="serious"></label>
   <div class="field"><label for="mute"><b>Muted words</b><small>Separate with commas. Any story with one of these words disappears.</small></label><input id="mute" type="text" autocomplete="off" placeholder="crypto, AI, Taylor Swift"></div>
   <div class="field"><b>Hidden sources</b><div id="muted" class="muted"></div></div>
   <details class="health"><summary id="health-sum">Sources</summary><ul id="health"></ul></details>

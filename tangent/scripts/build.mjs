@@ -25,7 +25,7 @@ const status = [], fresh = [];
 await pool(feeds, 8, async feed => {
   try {
     const items = parseFeed(await get(feed.url), feed);
-    const kept = items.filter(x => !isBlocked(x.title, x.summary)).slice(0, PER_SOURCE);
+    const kept = items.filter(x => x.allowSerious || !isBlocked(x.title, x.summary)).slice(0, PER_SOURCE);
     fresh.push(...kept);
     status.push({ name: feed.name, cat: feed.cat, ok: true, found: items.length, kept: kept.length });
   } catch (e) {
@@ -40,7 +40,7 @@ for (const x of fresh) {
 }
 const seenTitles = new Set();
 let items = [...merged.values()]
-  .filter(x => !isBlocked(x.title, x.summary || ''))
+  .filter(x => x.allowSerious || !isBlocked(x.title, x.summary || ''))
   .filter(x => now - Date.parse(x.date) < (x.evergreen ? EVERGREEN_DAYS : FRESH_DAYS) * DAY)
   .sort((a, b) => Date.parse(b.date) - Date.parse(a.date))
   .filter(x => { const k = titleKey(x.title); if (seenTitles.has(k)) return false; seenTitles.add(k); return true; })
