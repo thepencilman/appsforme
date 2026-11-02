@@ -1,0 +1,7 @@
+{
+  "name": "tangent",
+  "private": true,
+  "type": "module",
+  "scripts": { "build": "node scripts/build.mjs", "test": "node test/run.mjs" },
+  "dependencies": { "fast-xml-parser": "5.2.5" }
+}

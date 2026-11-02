@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Tangent</title>
+<meta name="description" content="A feed of cool, curious things.">
+<meta name="theme-color" content="#14131d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tangent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&family=DM+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="bar">
+    <a class="brand" href="#" id="home" aria-label="Tangent, back to top">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="15" cy="18" r="9.5" fill="none" stroke="currentColor" stroke-width="3"/><path d="M3 15.6 29 4" stroke="var(--pop)" stroke-width="3" stroke-linecap="round"/></svg>
+      <span>tangent</span>
+    </a>
+    <span class="updated" id="updated"></span>
+    <button class="icon" id="tune" aria-label="Tune your feed"><svg viewBox="0 0 24 24"><path d="M4 7h9m6 0h1M4 17h1m6 0h9"/><circle cx="16" cy="7" r="2.6"/><circle cx="8" cy="17" r="2.6"/></svg></button>
+  </div>
+  <nav class="chips" id="chips" aria-label="Topics"></nav>
+</header>
+<button class="fresh" id="fresh" hidden>New stories</button>
+<main id="feed" class="feed" aria-live="polite"></main>
+<div id="sentinel" class="sentinel" aria-hidden="true"></div>
+
+<div class="scrim" id="scrim" hidden></div>
+<section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" hidden>
+  <div class="sheet-head"><h2 id="sheet-title">Tune your feed</h2><button class="done" id="close">Done</button></div>
+  <div id="dials" class="dials"></div>
+  <label class="switch"><span><b>Keep serious news out</b><small>Stories about politics, wars and crime stay hidden, even if they get past the filter that runs on the server.</small></span><input type="checkbox" id="serious"></label>
+  <div class="field"><label for="mute"><b>Muted words</b><small>Separate with commas. Any story with one of these words disappears.</small></label><input id="mute" type="text" autocomplete="off" placeholder="crypto, AI, Taylor Swift"></div>
+  <div class="field"><b>Hidden sources</b><div id="muted" class="muted"></div></div>
+  <details class="health"><summary id="health-sum">Sources</summary><ul id="health"></ul></details>
+  <button class="reset" id="reset">Clear everything you've taught it</button>
+</section>
+<div class="toast" id="toast" role="status" hidden></div>
+<script src="app.js"></script>
+</body>
+</html>

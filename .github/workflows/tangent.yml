@@ -1,0 +1,49 @@
+name: Update Tangent
+on:
+  schedule:
+    - cron: '17 */2 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['tangent/**', '.github/workflows/tangent.yml', '!tangent/site/data/**']
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+concurrency:
+  group: tangent
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}tangent/
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+        working-directory: tangent
+      - run: npm run build
+        working-directory: tangent
+      - name: Save new stories
+        run: |
+          git config user.name "tangent-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tangent/site/data/feed.json
+          git diff --cached --quiet || git commit -m "Update Tangent stories"
+          git pull --rebase -X theirs origin main
+          git push
+      - name: Prepare site
+        run: |
+          mkdir -p _site
+          cp -r tangent/site _site/tangent
+          echo '<!doctype html><meta http-equiv="refresh" content="0;url=tangent/"><a href="tangent/">Tangent</a>' > _site/index.html
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deploy
+        uses: actions/deploy-pages@v4
