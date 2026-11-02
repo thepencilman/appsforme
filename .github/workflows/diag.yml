@@ -1,0 +1,25 @@
+name: Diag
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/diag.yml']
+jobs:
+  d:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          t(){ echo "=== $1"; curl -s -m 20 -L -D /tmp/h -o /tmp/b -H 'Origin: https://thepencilman.github.io' -A 'Mozilla/5.0' "$2"; head -1 /tmp/h; grep -i '^access-control-allow-origin' /tmp/h; grep -i '^content-type' /tmp/h | tail -1; wc -c < /tmp/b; head -c 500 /tmp/b; echo; }
+          G='https%3A%2F%2Fnews.google.com%2Frss%2Fsearch%3Fq%3Dmodular%2Bsynth%26hl%3Den-US%26gl%3DUS%26ceid%3DUS%3Aen'
+          B='https%3A%2F%2Fwww.bing.com%2Fnews%2Fsearch%3Fq%3Dmodular%2Bsynth%26format%3Drss'
+          t rss2json-google "https://api.rss2json.com/v1/api.json?rss_url=$G"
+          t rss2json-bing "https://api.rss2json.com/v1/api.json?rss_url=$B"
+          t allorigins "https://api.allorigins.win/raw?url=$G"
+          t codetabs "https://api.codetabs.com/v1/proxy/?quest=$G"
+          t gdelt "https://api.gdeltproject.org/api/v2/doc/doc?query=modular%20synth&mode=artlist&format=json&maxrecords=5"
+          t hn "https://hn.algolia.com/api/v1/search?query=modular+synth&tags=story&hitsPerPage=2"
+          t reddit "https://www.reddit.com/search.json?q=modular+synth&limit=2"
+          t wikipedia "https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=modular+synth&format=json&origin=*&srlimit=2"
+          t lemmy "https://lemmy.world/api/v3/search?q=modular+synth&type_=Posts&limit=2"
+          t googlenews-direct "https://news.google.com/rss/search?q=Woonsocket+RI&hl=en-US&gl=US&ceid=US:en"
+          t bingnews-direct "https://www.bing.com/news/search?q=Woonsocket+RI&format=rss"
+          for u in https://www.valleybreeze.com/feed/ https://woonsocketcall.com/feed/ https://www.wpri.com/feed/ https://rhodeislandcurrent.com/feed/ https://ecori.org/feed/ https://turnto10.com/rss https://www.abc6.com/feed/ https://www.golocalprov.com/rss https://www.milforddailynews.com/rss https://patch.com/rhode-island/woonsocket/rss.xml https://www.woonsocketri.org/rss.xml https://www.nhregister.com/rss; do t "$u" "$u" | head -5 | cut -c1-200; done
