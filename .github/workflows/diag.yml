@@ -8,13 +8,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
+          set +e
           t(){ echo "=== $1"; curl -s -m 20 -L -D /tmp/h -o /tmp/b -H 'Origin: https://thepencilman.github.io' -A 'Mozilla/5.0' "$2"; head -1 /tmp/h; grep -i '^access-control-allow-origin' /tmp/h; grep -i '^content-type' /tmp/h | tail -1; wc -c < /tmp/b; head -c 500 /tmp/b; echo; }
           G='https%3A%2F%2Fnews.google.com%2Frss%2Fsearch%3Fq%3Dmodular%2Bsynth%26hl%3Den-US%26gl%3DUS%26ceid%3DUS%3Aen'
           B='https%3A%2F%2Fwww.bing.com%2Fnews%2Fsearch%3Fq%3Dmodular%2Bsynth%26format%3Drss'
-          t rss2json-google "https://api.rss2json.com/v1/api.json?rss_url=$G"
-          t rss2json-bing "https://api.rss2json.com/v1/api.json?rss_url=$B"
-          t allorigins "https://api.allorigins.win/raw?url=$G"
-          t codetabs "https://api.codetabs.com/v1/proxy/?quest=$G"
+          curl -s -m 20 "https://api.rss2json.com/v1/api.json?rss_url=$B" | python3 -c "import sys,json; d=json.load(sys.stdin); print(json.dumps(d['items'][:2])[:1200]); print(len(d['items']))"
           t gdelt "https://api.gdeltproject.org/api/v2/doc/doc?query=modular%20synth&mode=artlist&format=json&maxrecords=5"
           t hn "https://hn.algolia.com/api/v1/search?query=modular+synth&tags=story&hitsPerPage=2"
           t reddit "https://www.reddit.com/search.json?q=modular+synth&limit=2"
