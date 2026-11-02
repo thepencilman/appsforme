@@ -9,7 +9,7 @@ const SERIOUS = new RegExp('\\b(' + [
   'shooting','shooter','murder\\w*','homicide','(?:were|was|people|dead|\\d+) killed','stabb\\w*','massacre','genocide','rape\\w*','assault\\w*','abuse\\w*','suicide','overdose','gulag',
   'lawsuit','sued','indict\\w*','layoffs?','recession','inflation','stock market','pandemic','outbreak','cancer'
 ].join('|') + ')\\b', 'i');
-const JUNK = /\b(sponsored|black friday|cyber monday|prime day|best deals?|deals? (on|of)|\d+% off|on sale|save \$?\d+|coupon|giveaway|promo code|podcast episode)\b/i;
+const JUNK = /\b(sponsored|black friday|cyber monday|prime day|best deals?|deals? (on|of)|\d+% off|on sale|save \$?\d+|coupon|giveaway|promo code|podcast episode|supporter rewards)\b/i;
 
 export const isBlocked = (title, summary = '') => SERIOUS.test(title) || SERIOUS.test(summary.slice(0, 160)) || JUNK.test(title);
 
