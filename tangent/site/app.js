@@ -24,7 +24,9 @@ const S = {
   mute: store.get('mute', ''),
   serious: store.get('serious', true),
   interests: store.get('interests', []),
-  followed: store.get('followed', {})
+  followed: store.get('followed', {}),
+  myFeeds: store.get('myFeeds', []),
+  feedItems: store.get('feedItems', {})
 };
 let data = { items: [], feeds: [] }, liveItems = new Map(), search = null, view = 'all', queue = [], shown = 0, dividerDone = false;
 const seenSet = new Set(S.seen);
@@ -61,7 +63,8 @@ function spread(list) { // keeps one source or topic from taking over the screen
   }
   return out;
 }
-const followedItems = () => S.interests.flatMap(t => S.followed[t]?.items || []);
+const followedItems = () => S.interests.flatMap(t => S.followed[t]?.items || []).concat(S.myFeeds.flatMap(f => S.feedItems[f.url]?.items || []));
+const hasFollowing = () => S.interests.length > 0 || S.myFeeds.length > 0;
 function allItems() {
   const seen = new Set(data.items.map(x => x.id)), titles = new Set(data.items.map(x => x.title.toLowerCase()));
   const extra = followedItems().filter(x => {
@@ -176,7 +179,7 @@ function chips() {
   };
   add('all', 'For you');
   add('local', 'Local');
-  if (S.interests.length) add('followed', 'Following');
+  if (hasFollowing()) add('followed', 'Following');
   Object.entries(CATS).filter(([k]) => k !== 'local').forEach(([k, v]) => add(k, v));
   add('saved', 'Saved');
 }
@@ -245,7 +248,7 @@ document.addEventListener('click', async e => {
 
 let last;
 function openSheet() {
-  last = document.activeElement; dials(); mutedList(); interestList(); health();
+  last = document.activeElement; dials(); mutedList(); interestList(); feedList(); health();
   $('serious').checked = S.serious; $('mute').value = S.mute;
   $('scrim').hidden = $('sheet').hidden = false; document.body.classList.add('locked'); $('close').focus();
 }
@@ -281,6 +284,17 @@ function interestList() {
   box.replaceChildren(...S.interests.map(t => {
     const b = document.createElement('button'); b.textContent = `${t} ×`; b.setAttribute('aria-label', `Stop following ${t}`);
     b.onclick = () => { unfollow(t); interestList(); };
+    return b;
+  }));
+}
+function feedList() {
+  const box = $('my-feeds');
+  box.replaceChildren(...S.myFeeds.map(f => {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = `${f.name} ×`; b.setAttribute('aria-label', `Remove ${f.name}`);
+    b.onclick = () => {
+      S.myFeeds = S.myFeeds.filter(x => x.url !== f.url); delete S.feedItems[f.url];
+      save('myFeeds', 'feedItems'); if (view === 'followed' && !hasFollowing()) view = 'all'; chips(); feedList();
+    };
     return b;
   }));
 }
@@ -393,8 +407,48 @@ function follow(term) {
 function unfollow(term) {
   S.interests = S.interests.filter(t => t !== term); delete S.followed[term];
   for (const w of tokens(term)) S.words[w] = Math.max(0, (S.words[w] || 0) - 3);
-  save('interests', 'words', 'followed'); if (view === 'followed') view = 'all'; chips();
+  save('interests', 'words', 'followed'); if (view === 'followed' && !hasFollowing()) view = 'all'; chips();
 }
+const firstImage = html => (String(html || '').match(/<img[^>]+src=["']([^"']+)["']/i) || [])[1];
+async function readFeed(url) {
+  const d = await timed(RELAY + encodeURIComponent(url));
+  if (d.status !== 'ok' || !d.items?.length) throw new Error('not a feed');
+  const name = strip(d.feed?.title) || host(url);
+  const items = d.items.map(i => {
+    const link = webUrl(i.link); if (!link || !strip(i.title)) return null;
+    const a = article(url, strip(i.title), link, validDate(i.pubDate), strip(i.description), name);
+    const pic = i.thumbnail || (/image/.test(i.enclosure?.type || '') && i.enclosure.link) || firstImage(i.content) || firstImage(i.description);
+    a.image = pic ? webUrl(pic) : '';
+    return a;
+  }).filter(Boolean);
+  if (!items.length) throw new Error('not a feed');
+  return { name, items };
+}
+function feedCandidates(raw) {
+  const base = /^https?:\/\//i.test(raw) ? raw : 'https://' + raw;
+  const u = webUrl(base); if (!u) return [];
+  const root = u.replace(/\/+$/, '');
+  return [u, ...['/feed', '/rss', '/feed.xml', '/rss.xml', '/atom.xml', '/index.xml'].map(p => root + p)];
+}
+async function addFeed(raw) {
+  const msg = $('feed-msg'), say = t => { msg.textContent = t; msg.hidden = !t; };
+  const list = feedCandidates(raw.trim());
+  if (!list.length) { say('Enter a web address, like example.com/feed.'); return; }
+  $('feed-add').disabled = true; say('Looking for a feed…');
+  for (const url of list) {
+    if (S.myFeeds.some(f => f.url === url)) { say('That feed is already in your list.'); $('feed-add').disabled = false; return; }
+    try {
+      const f = await readFeed(url);
+      S.myFeeds.push({ url, name: f.name }); S.feedItems[url] = { at: Date.now(), items: f.items };
+      save('myFeeds', 'feedItems'); chips(); feedList();
+      $('feed-url').value = ''; say(`Added ${f.name} with ${f.items.length} ${f.items.length === 1 ? "story" : "stories"}.`);
+      $('feed-add').disabled = false; return;
+    } catch {}
+  }
+  say("Couldn't find a feed there. Check the address, or look for an RSS link on that site.");
+  $('feed-add').disabled = false;
+}
+$('add-feed').onsubmit = e => { e.preventDefault(); addFeed($('feed-url').value); };
 let refreshing = false;
 async function refreshInterests(pulled) {
   if (refreshing) return; refreshing = true;
@@ -407,6 +461,16 @@ async function refreshInterests(pulled) {
       S.followed[t] = { at: Date.now(), items: a.filter(x => Date.now() - Date.parse(x.date) < 2592e6).slice(0, 20) };
       added = added || S.followed[t].items.some(x => !old.has(x.id));
       save('followed');
+    } catch {}
+    await new Promise(r => setTimeout(r, 1200));
+  }
+  for (const f of [...S.myFeeds]) {
+    if (Date.now() - (S.feedItems[f.url]?.at || 0) < (pulled ? 6e5 : 2 * 36e5)) continue;
+    try {
+      const r = await readFeed(f.url);
+      if (!S.myFeeds.some(x => x.url === f.url)) continue;
+      added = added || r.items.some(x => !old.has(x.id));
+      S.feedItems[f.url] = { at: Date.now(), items: r.items }; save('feedItems');
     } catch {}
     await new Promise(r => setTimeout(r, 1200));
   }
@@ -454,7 +518,7 @@ async function load(first) {
     { const d = document.createElement('div'); d.className = 'empty'; const b = document.createElement('b'); b.textContent = "Can't reach your feed"; d.append(b, 'Check your connection and reopen the app.'); $('feed').replaceChildren(d); }
   }
 }
-view = store.get('view', 'all'); if (!CATS[view] && view !== 'saved' && !(view === 'followed' && S.interests.length)) view = 'all';
+view = store.get('view', 'all'); if (!CATS[view] && view !== 'saved' && !(view === 'followed' && hasFollowing())) view = 'all';
 chips(); load(true).then(refreshInterests);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { load(false); refreshInterests(); } });
 // Pull down from the top to get new stories and any new version of the app.

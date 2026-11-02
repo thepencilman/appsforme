@@ -96,6 +96,10 @@ body.searching .chips{display:none}
 .follow[aria-pressed=true]{background:none;color:var(--fg);border:1px solid var(--line)}
 .label{margin:6px 0 -12px;font:500 13px var(--mono);color:var(--dim)}
 .note{color:var(--dim);margin:0}
+.addrow{display:flex;gap:8px}
+.addrow input{flex:1;min-width:0}
+.addrow button{flex:none;min-height:44px;padding:0 18px;border-radius:6px;background:var(--pop);color:#fff;font-weight:700}
+.addrow button:disabled{opacity:.6}
 .terms{display:flex;flex-wrap:wrap;gap:7px}
 .terms button{min-height:36px;padding:0 13px;border:1px solid var(--line);border-radius:18px;font-size:14.5px;font-weight:700}
 .pull{position:fixed;z-index:15;left:0;right:0;top:var(--head,110px);display:flex;align-items:center;justify-content:center;gap:9px;height:44px;margin-top:-44px;color:var(--dim);font-size:14.5px;font-weight:700;opacity:0;pointer-events:none;transform:translateY(0);transition:transform .2s,opacity .2s}
