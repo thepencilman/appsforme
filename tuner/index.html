@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Tunemate DT-440</title>
+<meta name="description" content="A calculator-style digital tuner for guitar and bass.">
+<meta name="theme-color" content="#161513">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tuner">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700;800&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="calc" id="calc">
+  <header class="brandbar">
+    <div class="brand"><b>TUNEMATE</b><span>DT-440</span></div>
+    <div class="solar" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+  </header>
+
+  <section class="bezel">
+    <div class="lcd" id="lcd" role="img" aria-label="Tuner display">
+      <div class="ann-row">
+        <span class="ann" id="a-mic">MIC</span>
+        <span class="sig" id="sig" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+        <span class="ann" id="a-gtr">GTR</span>
+        <span class="ann" id="a-bass">BASS</span>
+        <span class="ann" id="a-chr">CHROM</span>
+        <span class="ann" id="a-lock">LOCK</span>
+        <span class="grow"></span>
+        <span class="ann on" id="a-cal">A4=440</span>
+      </div>
+
+      <div class="main-row">
+        <div class="note">
+          <div class="seg seg-note" id="d-note"></div>
+          <div class="note-side">
+            <span class="acc" id="a-sharp">♯</span>
+            <span class="acc" id="a-flat">♭</span>
+            <div class="seg seg-oct" id="d-oct"></div>
+          </div>
+        </div>
+        <div class="readouts">
+          <div class="readout"><div class="seg seg-hz" id="d-hz"></div><span class="unit">Hz</span></div>
+          <div class="readout"><div class="seg seg-cents" id="d-cents"></div><span class="unit">CENT</span></div>
+        </div>
+      </div>
+
+      <div class="meter-row">
+        <span class="ann arrow" id="a-flatarrow">◀</span>
+        <div class="meter" id="meter" aria-hidden="true"></div>
+        <span class="ann arrow" id="a-sharparrow">▶</span>
+      </div>
+      <div class="scale" aria-hidden="true"><span>-50</span><span>-25</span><span>0</span><span>+25</span><span>+50</span></div>
+
+      <div class="status-row">
+        <span class="status" id="status" aria-live="polite">PRESS ON</span>
+        <span class="ann" id="a-tune">IN TUNE</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="led-row">
+    <span class="tuning-name" id="tuning-name">GUITAR · STANDARD</span>
+    <span class="led" id="led" aria-hidden="true"></span>
+  </div>
+
+  <section class="keys" aria-label="Controls">
+    <div class="key-wrap"><small>INSTR</small><button class="key dark" id="k-mode">MODE</button></div>
+    <div class="key-wrap"><small>TUNING</small><button class="key dark" id="k-prev" aria-label="Previous tuning">◀</button></div>
+    <div class="key-wrap"><small>TUNING</small><button class="key dark" id="k-next" aria-label="Next tuning">▶</button></div>
+    <div class="key-wrap"><small>POWER</small><button class="key red" id="k-on">ON</button></div>
+
+    <div class="key-wrap"><small>CAL</small><button class="key gray" id="k-down" aria-label="Lower A4 reference">A4 −</button></div>
+    <div class="key-wrap"><small>CAL</small><button class="key gray" id="k-up" aria-label="Raise A4 reference">A4 +</button></div>
+    <div class="key-wrap"><small>REF</small><button class="key gray" id="k-tone">TONE</button></div>
+    <div class="key-wrap"><small>STRING</small><button class="key gray" id="k-auto">AUTO</button></div>
+  </section>
+
+  <section class="strings" id="strings" aria-label="Strings: tap to lock"></section>
+  <p class="hint" id="hint">Tap a string to lock onto it · AUTO picks the closest</p>
+</main>
+<script type="module" src="app.js"></script>
+</body>
+</html>
