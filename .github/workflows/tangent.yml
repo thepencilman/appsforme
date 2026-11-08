@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['tangent/**', '.github/workflows/tangent.yml', '!tangent/site/data/**']
+    paths: ['tangent/**', 'tuner/**', '.github/workflows/tangent.yml', '!tangent/site/data/**']
 permissions:
   contents: write
   pages: write
@@ -40,6 +40,9 @@ jobs:
         run: |
           mkdir -p _site
           cp -r tangent/site _site/tangent
+          mkdir -p _site/tuner
+          cp tuner/*.html tuner/*.css tuner/*.js tuner/*.webmanifest _site/tuner/
+          cp -r tuner/icons _site/tuner/icons
           echo '<!doctype html><meta http-equiv="refresh" content="0;url=tangent/"><a href="tangent/">Tangent</a>' > _site/index.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
